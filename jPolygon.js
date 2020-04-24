@@ -53,7 +53,7 @@ function clear_canvas(){
 }
 
 function draw(end){
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 2;
     ctx.strokeStyle = "white";
     ctx.lineCap = "square";
     ctx.beginPath();
@@ -70,9 +70,9 @@ function draw(end){
     if(end){
         ctx.lineTo(perimeter[0]['x'],perimeter[0]['y']);
         ctx.closePath();
-        ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
+        ctx.fillStyle = 'rgba(255, 255, 0, 0.5)';
         ctx.fill();
-        ctx.strokeStyle = 'blue';
+        ctx.strokeStyle = 'pink';
         complete = true;
     }
     ctx.stroke();
@@ -86,7 +86,7 @@ function draw(end){
 }
 
 function check_intersect(x,y){
-    if(perimeter.length < 4){
+    if(perimeter.length < 3){
         return false;
     }
     var p0 = new Array();
@@ -97,7 +97,9 @@ function check_intersect(x,y){
     p2['x'] = perimeter[perimeter.length-1]['x'];
     p2['y'] = perimeter[perimeter.length-1]['y'];
     p3['x'] = x;
-    p3['y'] = y;
+	p3['y'] = y;
+	
+	console.log("x: "+x+", y: "+y);
 
     for(var i=0; i<perimeter.length-1; i++){
         p0['x'] = perimeter[i]['x'];
@@ -113,7 +115,25 @@ function check_intersect(x,y){
     return false;
 }
 
+function close_selection(clickEvent){
+	if(perimeter.length==2){
+		alert('You need at least three points for a polygon');
+		return false;
+	}
+	x = perimeter[0]['x'];
+	y = perimeter[0]['y'];
+	if(check_intersect(x,y)){
+		alert('The line you are drowing intersect another line');
+		return false;
+	}
+	draw(true);
+	console.log('Polygon closed');
+	clickEvent.preventDefault();
+	return false;
+}
+
 function point_it(event) {
+	
     if(complete){
         alert('Polygon already created');
         return false;
@@ -121,30 +141,19 @@ function point_it(event) {
     var rect, x, y;
 
     if(event.ctrlKey || event.which === 3 || event.button === 2){
-        if(perimeter.length==2){
-            alert('You need at least three points for a polygon');
-            return false;
-        }
-        x = perimeter[0]['x'];
-        y = perimeter[0]['y'];
-        if(check_intersect(x,y)){
-            alert('The line you are drowing intersect another line');
-            return false;
-        }
-        draw(true);
-        alert('Polygon closed');
-	event.preventDefault();
-        return false;
+        close_selection(event)
     } else {
         rect = canvas.getBoundingClientRect();
         x = event.clientX - rect.left;
-        y = event.clientY - rect.top;
+		y = event.clientY - rect.top;
+		
         if (perimeter.length>0 && x == perimeter[perimeter.length-1]['x'] && y == perimeter[perimeter.length-1]['y']){
-            // same point - double click
-            return false;
-        }
+			// same point - multiple clicks, we don't save more points on exakt same location
+			return false;
+		}
+		
         if(check_intersect(x,y)){
-            alert('The line you are drowing intersect another line');
+            console.log("line interesects");
             return false;
         }
         perimeter.push({'x':x,'y':y});
